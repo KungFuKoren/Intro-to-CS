@@ -1,4 +1,6 @@
+
 package Exe.Ex2;
+
 
 /**
  * Introduction to Computer Science 2023, Ariel University,
@@ -60,14 +62,21 @@ public class Ex2 {
 	// FUNCTION EXPLANATION 
 	// A function that calculates an equation representing the polynomial , if given an array with two points , calculate using a simple line equation between two points ,
 	// y = mx + c , c will be the first element in the array and m is the second one. and if given only two points we initialize the array to be of 2 elements only.
-	// if three points are given , we will initialize the array to be of 3 elements , and calculate an equation of all three points (with the same y) 
+	// if three points are given , we will initialize the array to be of 3 elements , and calculate an equation of all three points using cramer's rule
 	// 
 	public static double[] PolynomFromPoints(double[] xx, double[] yy) {
+		// checks if one array is null - return null before the function starts
+		if(xx == null || yy == null) {
+	    	  double[] ans3 = null;
+	    	  return ans3;
+		}
 		double [] ans = null;
 		int lx = xx.length;
 		int ly = yy.length;
+		
 		// given two points - calculation of a line
 		if(xx!=null && yy!=null && lx==ly && lx>1 && lx<4) {
+			ans = null;
 			 if(lx == 2) {
 				   double [] ans1 = new double [2]; //initializing the array to be the size of 2
 				   double m =(yy[0]-yy[1])/(xx[0]-xx[1]); // the straight line formula
@@ -75,25 +84,36 @@ public class Ex2 {
 				   ans1[1] = m;
 				   return ans1;
 			   }
-			   else {
+			 else {
 				   double [] ans2 = new double [3]; // initializing the array
-               // using a formula for getting a polynom from three points
-			   //https://math.stackexchange.com/questions/889569/finding-a-parabola-from-three-points-algebraically	   
-				   double moneA = (xx[0]*(yy[2]-yy[1])+xx[1]*(yy[0]-yy[2])+xx[2]*(yy[1]-yy[0])); 
-				   double mehaneA = ((xx[0]-xx[1])*(xx[0]-xx[2])*(xx[1]*xx[2]));
-				   double a =moneA/mehaneA;
-				   
-				   double b = (yy[1]-yy[0])/(xx[1]-xx[0]) -a*(xx[0]-xx[1]);
-				   
-				   double c = yy[0] -a*xx[0]*xx[0] -b*xx[0];
-				   // setting the calculated numbers to their proper place in the answer array
-				   ans2[0] = c;
-				   ans2[1] = b;
-				   ans2[2] = a;
+               // using a formula for getting a polynomial equation from three points using cramer's rule
+			   //https://www.mathcelebrity.com/3ptquad.php?p1=1%2C3&p2=2%2C6&p3=3%2C11&pl=Calculate+Equation   
+				   double b = xx[0];
+					  double a = Math.pow(xx[0], 2);
+					  double c = 1;
+					  double d = yy[0];
+					  double f = xx[1];
+					  double e = Math.pow(xx[1], 2);
+					  double g = 1;
+					  double h =yy[1];
+					  double j = xx[2];
+					  double i = Math.pow(xx[2], 2);
+					  double k = 1;
+					  double l = yy[2];
+					  double delta = (a * f * k) + (b * g * i) + (c * e * j) - (c * f * i) - (a * g * j) - (b * e * k); // calculating the delta
+					  double aNumerator = (d * f * k) + (b * g * l) + (c * h * j) - (c * f * l) - (d * g * j) - (b * h * k); // calculating A numerator
+					  double bNumerator = (a * h * k) + (d * g * i) + (c * e * l) - (c * h * i) - (a * g * l) - (d * e * k); // calculating B numerator
+					  double cNumerator = 	(a * f * l) + (b * h * i) + (d * e * j) - (d * f * i) - (a * h * j) - (b * e * l); // calculating C numerator
+					 
+					 ans2[0] = aNumerator/delta;   // using cramer's rule to divide by delta 
+					 ans2[1] = bNumerator/delta;
+					 ans2[2] = cNumerator/delta;
+						   
 				   
 				   return ans2;
+	   }
 			   }
-		}
+		     		
 		return ans;
 	}
 	/** Two polynomials are equal if and only if the have the same values f(x) for 1+n values of x, 
@@ -185,8 +205,13 @@ public class Ex2 {
 					ans = ans +" +"+ String.valueOf(poly[i])+"x^"+String.valueOf(i);	// adds "+" , value of element , "x^" and the exponent				
 				}
 				else if (poly[i] < 0){
+					if(poly[i] == -1) {
+						ans = ans +"-x^"+String.valueOf(i);
+					}
+					else {
 					ans = ans +String.valueOf(poly[i])+"x^"+String.valueOf(i); // if element is negative ans will be the element value and "x^" , exponent
-				}				
+				}
+				}
 			    if(poly[i] == 0) { continue;}
 		}
 			if (poly[0] != 0 && poly[1] != 0) { // if the first and second elements aren't zero
@@ -311,17 +336,27 @@ public class Ex2 {
 		double seg = leng/numberOfTrapezoid;
 		
 		for(double i = min ; i < max ; i = i+seg) { // loops that runs for each segment (trapezoid) 
-		double y1dist	=Math.abs(f(p1 , i) - f(p2 , i));       //y distance
-		double y2dist = Math.abs(f(p1 , i+seg) - f(p2 , i+seg));//next y distance
+		double y1dist	=Math.abs(Ex2.f(p1 , i) - Ex2.f(p2 , i));       //y distance
+		double y2dist = Math.abs(Ex2.f(p1 , i+seg) - Ex2.f(p2 , i+seg));//next y distance
 		if(y2dist == 0 && y1dist == 0) { // straight line - no area
 			ans = ans +0;
 		}
-		else if(y2dist == 0 && !(y1dist==0)) { // triangle area
+		else if(y2dist == 0 && !(y1dist==0)) { // triangle area 
 			ans = ans + (seg*y1dist)/2;
 		}
 		else if(y1dist == 0 && !(y2dist==0)) { // triangle area
 			ans = ans + (seg*y2dist)/2;
 		}  
+		else if((Ex2.f(p1, i) > Ex2.f(p2, i)) && (Ex2.f(p2, i+seg) > Ex2.f(p1, i+seg))) { // if f1(x) > f2(x) and f1(x+segment) < f2(x+segment) if they change which polynomial is higher 
+			double sameX = Ex2.sameValue(p1, p2, i, i+seg, EPS);                      // and calculates two triangles, using sameValue function to find the certain x.
+			ans = ans + (Math.abs(i-sameX)*y1dist/2)+ (Math.abs(i+seg-sameX)*y2dist/2);
+
+		}
+		else if((Ex2.f(p2, i) > Ex2.f(p1, i)) && (Ex2.f(p1, i+seg) > Ex2.f(p2, i+seg))) { // the opposite for the previous one.
+			double sameX = Ex2.sameValue(p1, p2, i, i+seg, EPS);
+			ans = ans + (Math.abs(i-sameX)*y1dist/2)+ (Math.abs(i+seg-sameX)*y2dist/2);
+
+		}
 		else {                                  // trapezoid area
 			ans = ans + ((y2dist+y1dist)/2)*seg;
 		}
