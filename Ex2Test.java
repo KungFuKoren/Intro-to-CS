@@ -215,6 +215,13 @@ class Ex2Test {
 		double a2 = Ex2.area(po2, po1, x1, x2, 100);
 		assertEquals(a1,a2,Ex2.EPS);
 }
+	@Test
+	public void testArea2() {
+		
+		double b1 = Ex2.area(po2, po3, 6, 8, 90); 
+		double b2 = Ex2.area(po3, po2, 6, 8, 90);
+		assertEquals(b1 , b2 ,Ex2.EPS);
+	}
 	/*
 	 * tests to see if the area works with negative values
 	 */
@@ -243,5 +250,101 @@ class Ex2Test {
 	    double expected = 240.00000000000017; // calculated manually
 	    assertEquals(expected, result);
 	}
+	// test only two points given
+	@Test 
+	public void testLeng2points() {
+		double[] p = {0, 1}; // y = x function
+		double s1 = 0; // first x point
+		double s2 = 1; // second x point
+		int numSeg = 2; // number of segments
 
+		double result = Ex2.length(p, s1, s2, numSeg);
+
+		// expected result is the distance between (0,0) and (1,1)
+		// which is sqrt(2)
+		assert Math.abs(result - Math.sqrt(2)) < Ex2.EPS; // use tolerance for floating point comparison
+
+	}
+	// tests a linear equation
+   @Test
+	   public void testLinearLength() {
+	        double[] p = {0, 1}; // y = x function
+	        double s1 = 0; // first x point
+	        double s2 = 1; // second x point
+	        int numSeg = 2; // number of segments
+
+	        double result = Ex2.length(p, s1, s2, numSeg);
+
+	        // expected result is the distance between (0,0) and (1,1)
+	        // which is the square root of 2
+	        assertEquals(Math.sqrt(2), result);
+	    
+   }
+   // tests quadratic equation
+   @Test
+   public void testQuadraticLength() {
+       double[] p = {0, 0, 1}; // y = x^2 function
+       double s1 = 0; // first x point
+       double s2 = 2; // second x point
+       int numSeg = 1; // number of segments
+
+       double result = Ex2.length(p, s1, s2, numSeg);
+
+       // expected result is the distance between (0,0) and (2,4)
+       // which is the square root of 20
+       assertEquals(Math.sqrt(20), result);
+   }
+   // tests a line
+   @Test
+   public void testPolynomFromPointsLine() {
+       double[] xx = {1, 2};
+       double[] yy = {2, 4};
+       double[] expected = {-0, 2};
+       assertTrue(Ex2.equals(expected, Ex2.PolynomFromPoints(xx, yy)));
+   }
+   // tests quadratic equation
+   @Test
+   public void testPolynomFromPointsParabola() {
+       double[] xx = {1, 2, 3};
+       double[] yy = {3, 6, 11};
+       double[] expected = {1, 0, 2};
+       double [] ans = Ex2.PolynomFromPoints(xx, yy);
+       assertTrue(Ex2.equals(expected , ans));
+   }
+  // both x and y coordinates are null
+   @Test
+   public void testPolynomFromPointsNull() {
+       double[] xx = null;
+       double[] yy = null;
+       double[] expected = null;
+       double[] tester = Ex2.PolynomFromPoints(xx , yy);
+       assertArrayEquals(expected, tester);
+   }
+   // uneven coordinates 
+   @Test
+   public void testPolynomFromPointsUneven() {
+       double[] xx = {1, 2, 3};
+       double[] yy = {3, 6};
+       double[] expected = null;
+       assertArrayEquals(expected, Ex2.PolynomFromPoints(xx, yy), 1e-6);
+   }
+   // tests poly that starts with blank places
+  @Test
+  public void testPoly1() {
+	  double[] poly1 = {0, 0, 0, 0, 0, -1, 0, 2};
+	  String result = Ex2.poly(poly1);
+	  String expected = "2.0x^7-x^5";
+	  assertEquals(result , expected);
+
+  }
+  // tests poly with few blanks in the middle of the array
+  @Test
+  public void testPoly2() {
+	  double[] poly = {-5, 0, 0, 2};
+	  String result = Ex2.poly(poly);
+	  String expected = "2.0x^3 -5.0";
+	  assert(result.equals(expected)) : "Test Case 2 Failed";
+
+  }
+   
 }
