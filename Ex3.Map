@@ -1,0 +1,509 @@
+package Exe.EX3;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+/**
+ * This class represents a 2D map as a "screen" or a raster matrix or maze over integers.
+ * @author boaz.benmoshe
+ *
+ */
+public class Map implements Map2D {
+	private int[][] _map;
+	private boolean _cyclicFlag = true;
+	
+	/**
+	 * Constructs a w*h 2D raster map with an init value v.
+	 * @param w
+	 * @param h
+	 * @param v
+	 */
+	public Map(int w, int h, int v) {init(w,h, v);}
+	/**
+	 * Constructs a square map (size*size).
+	 * @param size
+	 */
+	public Map(int size) {this(size,size, 0);}
+	
+	/**
+	 * Constructs a map from a given 2D array.
+	 * @param data
+	 */
+	public Map(int[][] data) {
+		init(data);
+	}
+	@Override
+	public void init(int w, int h, int v) {
+		_map = new int[w][h];
+		for(int i = 0 ; i < w ; i++) {
+			for(int j = 0 ; j<h ; j++) {
+				_map[i][j] = v;
+			}
+		}
+			
+		
+	}
+	@Override
+	public void init(int[][] arr) {
+		try {
+			Array2DCheck(arr);
+		}
+		catch (Exception e) {
+			System.out.println(e);
+		}
+		}
+	 public  void Array2DCheck(int[][] arr) throws RuntimeException {
+	    if(arr == null) {
+	    	throw new RuntimeException("Array is null");
+	    }
+	    int rows = arr.length;
+	    int cols = arr[0].length;
+	    for(int i = 0 ; i < rows ; i++) {
+	    		if(arr[i].length != cols) {
+	    			throw new RuntimeException("Array is ragged");    			
+	    		  }
+	    		else if( arr[i].length == 1) {
+	    			throw new RuntimeException("Array is one dimentional");    			
+	    		}
+	    		else if(arr[i] == null) {
+	    			throw new RuntimeException("Found an empty array");    			
+	    		}
+	    		else {
+	    			_map = new int[arr.length][arr[0].length];
+             	    	for(int k = 0 ; k < arr.length ; k++) {
+             	    		for(int j = 0 ; j <arr[0].length ; j++) {
+             	    		     _map[k][j] = arr[k][j];
+             	    		}
+             	    	}
+	    		}
+	    }
+	 }
+	 static boolean  is2DArray(int[][] arr) {
+   	 if(arr == null) {
+   		 return false;
+   	 }
+   	boolean ans = true;
+   	 int rows = arr.length;
+   	 int cols = arr[0].length;
+   	 for(int i = 0 ; i < rows ; i++) {
+   		  if(arr[i].length != cols || arr[i].length == 0 || arr[i] == null) {
+   			  return false;
+   			
+   		  }
+   	 }
+   	 return ans;     
+   }
+	@Override
+	public int[][] getMap() {
+		int[][] ans = null;
+		if(is2DArray(_map)) {
+			int[][] ans1 = new int [_map.length][_map[0].length];
+			for(int i=0 ; i<_map.length ; i++) {
+				for(int j = 0 ; j<_map[0].length ; j++) {
+					ans1[i][j] = _map[i][j];
+				}
+			}
+			return ans1;
+		}
+		
+		
+		return ans;
+	}
+	
+	@Override
+	public int getWidth() {
+			return _map.length;
+		
+		}
+	
+	@Override
+	public int getHeight() {
+		 
+			return _map[0].length;
+		
+		}
+	
+	@Override
+	public int getPixel(int x, int y) { 
+		if(x < _map.length && y<_map[0].length && x>=0 && y>=0 && is2DArray(_map)) {
+			return _map[x][y];
+			
+		}
+		return 0;
+		}
+	
+	@Override
+	public int getPixel(Pixel2D p) {
+		if(isInside(p)) {
+			return this.getPixel(p.getX(),p.getY());
+		}
+		
+		return 0;
+	}
+	
+	@Override
+	public void setPixel(int x, int y, int v) {
+		if(x < _map.length && y<_map[0].length && x>=0 && y>=0){
+		_map[x][y] = v;
+		}
+		}
+	
+	@Override
+	public void setPixel(Pixel2D p, int v) {
+		if(isInside(p)){
+			_map[p.getX()][p.getY()] = v;
+			}
+	}
+	
+	@Override
+	/** 
+	 * Fills this map with the new color (new_v) starting from p.
+	 * https://en.wikipedia.org/wiki/Flood_fill
+	 */
+	/**
+	 * Fills the area on the map starting from the given coordinates (xy) with a new color (new_v).
+	 * Returns the number of pixels that were filled.
+	 *
+	 * @param xy      The starting point coordinates on the map.
+	 * @param new_v   The new color value to fill the area with.
+	 * @return        The number of pixels that were filled.
+	 */
+	public int fill(Pixel2D xy, int new_v) {
+	    int ans = 0;
+	    int x = xy.getX();
+	    int y = xy.getY();
+
+	    int color = getPixel(x, y);
+
+	    ans = fillRec(x, y, color, new_v);
+
+	    return ans;
+	}
+
+	/**
+	 * Recursively fills the area on the map starting from the given coordinates (x, y) with a new color (newColor).
+	 * Returns the number of pixels that were filled.
+	 *
+	 * @param x           The x-coordinate of the current point.
+	 * @param y           The y-coordinate of the current point.
+	 * @param origColor   The original color value of the area.
+	 * @param newColor    The new color value to fill the area with.
+	 * @return            The number of pixels that were filled.
+	 */
+	public int fillRec(int x, int y, int origColor, int newColor) {
+	    int count = 0;
+
+	    // Check if current point is out of bounds or has a different color
+	    if (x < 0 || x >= _map.length || y < 0 || y >= _map[0].length || getPixel(x, y) != origColor) {
+	        return count;
+	    }
+
+	    // Set the new color for the current point
+	    setPixel(x, y, newColor);
+	    count = 1;
+
+	    // Fill the neighboring points recursively
+	    if (!_cyclicFlag) {
+	        count += fillRec(x + 1, y, origColor, newColor);
+	        count += fillRec(x - 1, y, origColor, newColor);
+	        count += fillRec(x, y + 1, origColor, newColor);
+	        count += fillRec(x, y - 1, origColor, newColor);
+	    } else {
+	        count += fillRec((x + 1) % _map.length, y % _map[0].length, origColor, newColor);
+	        count += fillRec((x - 1) % _map.length, y % _map[0].length, origColor, newColor);
+	        count += fillRec(x % _map.length, (y + 1) % _map[0].length, origColor, newColor);
+	        count += fillRec(x % _map.length, (y - 1) % _map[0].length, origColor, newColor);
+	    }
+
+	    return count;
+	}
+
+	@Override
+	/**
+	 * BFS like shortest the computation based on iterative raster implementation of BFS, see:
+	 * https://en.wikipedia.org/wiki/Breadth-first_search
+	 */
+	public Pixel2D[] shortestPath(Pixel2D p1, Pixel2D p2, int obsColor) {
+	    // Initialize the answer array
+	    Pixel2D[] ans = null;
+
+	    // Get the color of the start and end points
+	    int color = getPixel(p1);
+	    int color2 = getPixel(p2);
+
+	    // Get the obstacle color
+	    int obstacle = obsColor;
+
+	    // Get the initial and final coordinates
+	    int xInit = p1.getX();
+	    int yInit = p1.getY();
+	    int xFin = p2.getX();
+	    int yFin = p2.getY();
+
+	    // Generate a map with distances from the starting point to each cell
+	    int[][] newMap = neighborCount(xInit, yInit, obstacle);
+	    if(newMap[xFin][yFin] == color2) {
+	    	return ans;
+	    }
+
+	    // Find the path by checking neighbors and distances
+	    int[][] path = checkNeigh(xFin, yFin, obsColor, newMap, color2);
+
+	    // Convert the path to an array of Pixel2D objects
+	    Pixel2D[] ans1 = new Pixel2D[path.length];
+	    for (int i = 0; i < path.length; i++) {
+	        int x = path[i][0];
+	        int y = path[i][1];
+	        ans1[i] = new Index2D(x, y);
+	    }
+
+	    // Return the shortest path
+	    return ans1;
+	}
+
+	/**
+	 * Generates a map with distance values from a starting point to each cell on the grid.
+	 *
+	 * @param x        The x-coordinate of the starting point.
+	 * @param y        The y-coordinate of the starting point.
+	 * @param obsColor The color value representing obstacles.
+	 * @return A 2D array representing the map with distance values.
+	 */
+	public int[][] neighborCount(int x, int y, int obsColor) {
+	    // Initialize distance counter
+	    int distance = 0;
+
+	    // Create a new map
+	    int[][] newMap = getMap();
+
+	    // Initialize a queue for BFS traversal
+	    Queue<int[]> queue = new LinkedList<>();
+	    queue.offer(new int[]{x, y});
+
+	    // Perform BFS traversal
+	    while (!queue.isEmpty()) {
+	        int size = queue.size();
+
+	        for (int i = 0; i < size; i++) {
+	            int[] point = queue.poll();
+	            int currX = point[0];
+	            int currY = point[1];
+
+	            // Check if current cell is out of bounds or an obstacle
+	            if (currX < 0 || currX >= _map.length || currY < 0 || currY >= _map[0].length || _map[currX][currY] == obsColor) {
+	                continue;
+	            }
+
+	            // Update the distance value in the new map
+	            newMap[currX][currY] = distance;
+
+	            // Add neighbors to the queue for further traversal
+	            if (!_cyclicFlag) {
+	                queue.offer(new int[]{currX + 1, currY});
+	                queue.offer(new int[]{currX - 1, currY});
+	                queue.offer(new int[]{currX, currY + 1});
+	                queue.offer(new int[]{currX, currY - 1});
+	            } else {
+	                queue.offer(new int[]{(currX + 1) % _map.length, (currY) % _map[0].length});
+	                queue.offer(new int[]{(currX - 1) % _map.length, (currY) % _map[0].length});
+	                queue.offer(new int[]{(currX) % _map.length, (currY + 1) % _map[0].length});
+	                queue.offer(new int[]{(currX) % _map.length, (currY - 1) % _map[0].length});
+	            }
+	        }
+
+	        // Increment the distance counter
+	        distance++;
+	    }
+
+	    // Return the new map
+	    return newMap;
+	}
+
+	/**
+	 * Checks the neighbors of a cell to construct the shortest path.
+	 *
+	 * @param x       The x-coordinate of the current cell.
+	 * @param y       The y-coordinate of the current cell.
+	 * @param obs     The color value representing obstacles.
+	 * @param map     The map with distance values.
+	 * @param color   The color value of the end point.
+	 * @return A 2D array representing the path.
+	 */
+	public int[][] checkNeigh(int x, int y, int obs, int[][] map, int color) {
+	    int current = map[x][y];
+	    int count = 1;
+	    int[][] ans = new int[count][2];
+
+	    // Check if the current cell is an obstacle or the end point
+	    if (current == obs || current == color) {
+	        ans[0][0] = -1;
+	        return ans;
+	    }
+
+	    // If the current cell has a valid distance, construct the path
+	    if (current >= 0) {
+	        ans[0][0] = x;
+	        ans[0][1] = y;
+	        count++;
+
+	        ans = checkNeighRec(x, y, ans, count, obs, map);
+	    }
+
+	    // Return the path
+	    return ans;
+	}
+
+	/**
+	 * Recursive helper method to check the neighbors and construct the path.
+	 *
+	 * @param x       The x-coordinate of the current cell.
+	 * @param y       The y-coordinate of the current cell.
+	 * @param ans     The array representing the current path.
+	 * @param count   The number of cells in the path.
+	 * @param obs     The color value representing obstacles.
+	 * @param map     The map with distance values.
+	 * @return A 2D array representing the path.
+	 */
+	public int[][] checkNeighRec(int x, int y, int[][] ans, int count, int obs, int[][] map) {
+	    int current = map[x][y];
+
+	    // Check if the current cell is unreachable or a starting point
+	    if (current == 0) {
+	        ans[0][0] = -1;
+	        return ans;
+	    }
+
+	    // Check if the current cell is part of the path
+	    if (current == 1) {
+	        return ans;
+	    }
+
+	    // Check the neighbors and add them to the path
+	    if (!_cyclicFlag) {
+	        if (map[x - 1][y] == current - 1 && isInsideInt(x - 1, y) && map[x - 1][y] != obs) {
+	            ans[count][0] = x - 1;
+	            ans[count][1] = y;
+	            count++;
+	            ans = checkNeighRec(x - 1, y, ans, count, obs, map);
+	        }
+
+	        if (map[x + 1][y] == current - 1 && isInsideInt(x + 1, y) && map[x + 1][y] != obs) {
+	            ans[count][0] = x + 1;
+	            ans[count][1] = y;
+	            count++;
+	            ans = checkNeighRec(x + 1, y, ans, count, obs, map);
+	        }
+
+	        if (map[x][y - 1] == current - 1 && isInsideInt(x, y - 1) && map[x][y - 1] != obs) {
+	            ans[count][0] = x;
+	            ans[count][1] = y - 1;
+	            count++;
+	            ans = checkNeighRec(x, y - 1, ans, count, obs, map);
+	        }
+
+	        if (map[x][y + 1] == current - 1 && isInsideInt(x, y + 1) && map[x][y + 1] != obs) {
+	            ans[count][0] = x;
+	            ans[count][1] = y + 1;
+	            count++;
+	            ans = checkNeighRec(x, y + 1, ans, count, obs, map);
+	        }
+	    }
+
+	    if (_cyclicFlag) {
+	        if (map[(x - 1) % _map.length][(y) % _map[0].length] == current - 1 && isInsideInt(x - 1, y) && map[(x - 1) % _map.length][(y) % _map[0].length] != obs) {
+	            ans[count][0] = x - 1;
+	            ans[count][1] = y;
+	            count++;
+	            ans = checkNeighRec(x - 1, y, ans, count, obs, map);
+	        }
+
+	        if (map[(x + 1) % _map.length][y % _map[0].length] == current - 1 && isInsideInt(x + 1, y) && map[(x + 1) % _map.length][y % _map[0].length] != obs) {
+	            ans[count][0] = x + 1;
+	            ans[count][1] = y;
+	            count++;
+	            ans = checkNeighRec(x + 1, y, ans, count, obs, map);
+	        }
+
+	        if (map[x % _map.length][(y - 1) % _map[0].length] == current - 1 && isInsideInt(x, y - 1) && map[x % _map.length][(y - 1) % _map[0].length] != obs) {
+	            ans[count][0] = x;
+	            ans[count][1] = y - 1;
+	            count++;
+	            ans = checkNeighRec(x, y - 1, ans, count, obs, map);
+	        }
+
+	        if (map[x % _map.length][(y + 1) % _map[0].length] == current - 1 && isInsideInt(x, y + 1) && map[x % _map.length][(y + 1) % _map[0].length] != obs) {
+	            ans[count][0] = x;
+	            ans[count][1] = y + 1;
+	            count++;
+	            ans = checkNeighRec(x, y + 1, ans, count, obs, map);
+	        }
+	    }
+
+	    // Return the updated path
+	    return ans;
+	}
+
+
+
+	
+	
+	@Override
+	/////// add your code below ///////
+	public boolean isInside(Pixel2D p) {
+		int x = p.getX();
+		int y = p.getY();
+		if(x < _map.length && y<_map[0].length && x>=0 && y>=0 && is2DArray(_map)) {
+			return true;
+		}
+		return false;
+		
+	}
+	public boolean isInsideInt(int x , int y) {
+		if(x < _map.length && y<_map[0].length && x>=0 && y>=0 && is2DArray(_map)) {
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isCyclic() {
+		return _cyclicFlag;
+	}
+	@Override
+	public void setCyclic(boolean cy) {
+		this._cyclicFlag = cy;
+	}
+	@Override
+	/**
+	 * Calculates the distance of each pixel on the map from the given starting point (start).
+	 * The distance is calculated using the neighborCount method, considering obstacles with the specified color (obsColor).
+	 * Returns a new Map2D object representing the distances.
+	 *
+	 * @param start     The starting point on the map.
+	 * @param obsColor  The color value representing obstacles.
+	 * @return          A new Map2D object representing the distances from the starting point.
+	 */
+	public Map2D allDistance(Pixel2D start, int obsColor) {
+	    int color = getPixel(start);
+	    int y = start.getY();
+	    int x = start.getX();
+	    int[][] array = _map;
+	    array = neighborCount(x, y, obsColor);
+
+	    // Replace color values with -1 in the array
+	    for (int i = 0; i < _map.length; i++) {
+	        for (int j = 0; j < _map[0].length; j++) {
+	            if (array[i][j] == color) {
+	                array[i][j] = -1;
+	            }
+	        }
+	    }
+
+	    // Create a new Map2D object using the modified array
+	    Map2D ansMap = new Map(array);
+
+	    return ansMap;
+	}
+
+}
+
