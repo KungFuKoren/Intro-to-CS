@@ -208,7 +208,8 @@ public class Map implements Map2D {
 	        count += fillRec(x - 1, y, origColor, newColor);
 	        count += fillRec(x, y + 1, origColor, newColor);
 	        count += fillRec(x, y - 1, origColor, newColor);
-	    } else {
+	    } 
+	    else {
 	        count += fillRec((x + 1) % _map.length, y % _map[0].length, origColor, newColor);
 	        count += fillRec((x - 1) % _map.length, y % _map[0].length, origColor, newColor);
 	        count += fillRec(x % _map.length, (y + 1) % _map[0].length, origColor, newColor);
@@ -270,15 +271,18 @@ public class Map implements Map2D {
 	 * @return A 2D array representing the map with distance values.
 	 */
 	public int[][] neighborCount(int x, int y, int obsColor) {
-	    // Initialize distance counter
-	    int distance = 0;
-
-	    // Create a new map
+	    // Initialize a new map
 	    int[][] newMap = getMap();
 
 	    // Initialize a queue for BFS traversal
 	    Queue<int[]> queue = new LinkedList<>();
 	    queue.offer(new int[]{x, y});
+
+	    // Initialize distance counter
+	    int distance = 0;
+
+	    // Initialize initial color
+	    int initColor = getPixel(x, y);
 
 	    // Perform BFS traversal
 	    while (!queue.isEmpty()) {
@@ -290,8 +294,8 @@ public class Map implements Map2D {
 	            int currY = point[1];
 
 	            // Check if current cell is out of bounds or an obstacle
-	            if (currX < 0 || currX >= _map.length || currY < 0 || currY >= _map[0].length || _map[currX][currY] == obsColor) {
-	                continue;
+	            if (currX < 0 || currX >= _map.length || currY < 0 || currY >= _map[0].length || newMap[currX][currY] == obsColor) {
+	                break;
 	            }
 
 	            // Update the distance value in the new map
@@ -299,15 +303,31 @@ public class Map implements Map2D {
 
 	            // Add neighbors to the queue for further traversal
 	            if (!_cyclicFlag) {
-	                queue.offer(new int[]{currX + 1, currY});
-	                queue.offer(new int[]{currX - 1, currY});
-	                queue.offer(new int[]{currX, currY + 1});
-	                queue.offer(new int[]{currX, currY - 1});
+	                if (currX + 1 < _map.length && newMap[currX + 1][currY] != obsColor && newMap[currX + 1][currY] == initColor) {
+	                    queue.offer(new int[]{currX + 1, currY});
+	                }
+	                if (currX - 1 >= 0 && newMap[currX - 1][currY] != obsColor && newMap[currX - 1][currY] == initColor) {
+	                    queue.offer(new int[]{currX - 1, currY});
+	                }
+	                if (currY + 1 < _map[0].length && newMap[currX][currY + 1] != obsColor && newMap[currX][currY + 1] == initColor) {
+	                    queue.offer(new int[]{currX, currY + 1});
+	                }
+	                if (currY - 1 >= 0 && newMap[currX][currY - 1] != obsColor && newMap[currX][currY - 1] == initColor) {
+	                    queue.offer(new int[]{currX, currY - 1});
+	                }
 	            } else {
-	                queue.offer(new int[]{(currX + 1) % _map.length, (currY) % _map[0].length});
-	                queue.offer(new int[]{(currX - 1) % _map.length, (currY) % _map[0].length});
-	                queue.offer(new int[]{(currX) % _map.length, (currY + 1) % _map[0].length});
-	                queue.offer(new int[]{(currX) % _map.length, (currY - 1) % _map[0].length});
+	                if (newMap[(currX + 1) % _map.length][currY] != obsColor && newMap[(currX + 1) % _map.length][currY] == initColor) {
+	                    queue.offer(new int[]{(currX + 1) % _map.length, currY});
+	                }
+	                if (newMap[(currX - 1 + _map.length) % _map.length][currY] != obsColor && newMap[(currX - 1 + _map.length) % _map.length][currY] == initColor) {
+	                    queue.offer(new int[]{(currX - 1 + _map.length) % _map.length, currY});
+	                }
+	                if (newMap[currX][(currY + 1) % _map[0].length] != obsColor && newMap[currX][(currY + 1) % _map[0].length] == initColor) {
+	                    queue.offer(new int[]{currX, (currY + 1) % _map[0].length});
+	                }
+	                if (newMap[currX][(currY - 1 + _map[0].length) % _map[0].length] != obsColor && newMap[currX][(currY - 1 + _map[0].length) % _map[0].length] == initColor) {
+	                    queue.offer(new int[]{currX, (currY - 1 + _map[0].length) % _map[0].length});
+	                }
 	            }
 	        }
 
@@ -319,41 +339,26 @@ public class Map implements Map2D {
 	    return newMap;
 	}
 
-	/**
-	 * Checks the neighbors of a cell to construct the shortest path.
-	 *
-	 * @param x       The x-coordinate of the current cell.
-	 * @param y       The y-coordinate of the current cell.
-	 * @param obs     The color value representing obstacles.
-	 * @param map     The map with distance values.
-	 * @param color   The color value of the end point.
-	 * @return A 2D array representing the path.
-	 */
 	public int[][] checkNeigh(int x, int y, int obs, int[][] map, int color) {
 	    int current = map[x][y];
-	    int count = 1;
-	    int[][] ans = new int[count][2];
+	    int[][] ans = new int[current+1][2];
 
 	    // Check if the current cell is an obstacle or the end point
-	    if (current == obs || current == color) {
+	    if (current == obs || current == color || current == 0) {
 	        ans[0][0] = -1;
 	        return ans;
 	    }
-
-	    // If the current cell has a valid distance, construct the path
-	    if (current >= 0) {
-	        ans[0][0] = x;
-	        ans[0][1] = y;
-	        count++;
-
-	        ans = checkNeighRec(x, y, ans, count, obs, map);
+	    else {
+	    	ans[0][0] = x;
+        	ans[0][1] = y;
+	    	int count = 1;
+	        ans = checkNeighRec(x, y, ans, count, map);
 	    }
-
 	    // Return the path
 	    return ans;
 	}
 
-	/**
+	/*
 	 * Recursive helper method to check the neighbors and construct the path.
 	 *
 	 * @param x       The x-coordinate of the current cell.
@@ -364,88 +369,71 @@ public class Map implements Map2D {
 	 * @param map     The map with distance values.
 	 * @return A 2D array representing the path.
 	 */
-	public int[][] checkNeighRec(int x, int y, int[][] ans, int count, int obs, int[][] map) {
-	    int current = map[x][y];
-
-	    // Check if the current cell is unreachable or a starting point
-	    if (current == 0) {
-	        ans[0][0] = -1;
+	public int[][] checkNeighRec(int x, int y, int[][] ans, int count, int[][] map) {
+	    int until = map[x][y];
+	    if (until == 0) {
 	        return ans;
 	    }
-
-	    // Check if the current cell is part of the path
-	    if (current == 1) {
-	        return ans;
-	    }
-
-	    // Check the neighbors and add them to the path
 	    if (!_cyclicFlag) {
-	        if (map[x - 1][y] == current - 1 && isInsideInt(x - 1, y) && map[x - 1][y] != obs) {
+	        if (isInsideInt(x - 1, y) && map[x - 1][y] == until - 1) {
 	            ans[count][0] = x - 1;
 	            ans[count][1] = y;
 	            count++;
-	            ans = checkNeighRec(x - 1, y, ans, count, obs, map);
+	            ans = checkNeighRec(x - 1, y, ans, count, map);  // Assign the returned array back to ans
 	        }
-
-	        if (map[x + 1][y] == current - 1 && isInsideInt(x + 1, y) && map[x + 1][y] != obs) {
+	        else if (isInsideInt(x + 1, y) && map[x + 1][y] == until - 1) {
 	            ans[count][0] = x + 1;
 	            ans[count][1] = y;
 	            count++;
-	            ans = checkNeighRec(x + 1, y, ans, count, obs, map);
+	            ans = checkNeighRec(x + 1, y, ans, count, map);  // Assign the returned array back to ans
 	        }
+	        else if (isInsideInt(x, y - 1) && map[x][y - 1] == until - 1) {
 
-	        if (map[x][y - 1] == current - 1 && isInsideInt(x, y - 1) && map[x][y - 1] != obs) {
 	            ans[count][0] = x;
 	            ans[count][1] = y - 1;
 	            count++;
-	            ans = checkNeighRec(x, y - 1, ans, count, obs, map);
+	            ans = checkNeighRec(x, y - 1, ans, count, map);  // Assign the returned array back to ans
 	        }
-
-	        if (map[x][y + 1] == current - 1 && isInsideInt(x, y + 1) && map[x][y + 1] != obs) {
+	        else  if (isInsideInt(x, y + 1) && map[x][y + 1] == until - 1) {
 	            ans[count][0] = x;
 	            ans[count][1] = y + 1;
 	            count++;
-	            ans = checkNeighRec(x, y + 1, ans, count, obs, map);
+	            ans = checkNeighRec(x, y + 1, ans, count, map);  // Assign the returned array back to ans
+	        }
+	    } 
+	    
+	    else {
+	        if (isInsideInt((x - 1)%map.length, y%map[0].length) && map[(x - 1)%map.length][y%map[0].length] == until - 1) {
+	            ans[count][0] = (x - 1)%map.length;
+	            ans[count][1] = y%map[0].length;
+	            count++;
+	            ans = checkNeighRec((x - 1)%map.length, y%map[0].length, ans, count, map);  // Assign the returned array back to ans
+	        }
+	        if (isInsideInt((x + 1)%map.length, y%map[0].length) && map[(x + 1)%map.length][y%map[0].length] == until - 1) {
+	            ans[count][0] = (x + 1)%map.length;
+	            ans[count][1] = y%map[0].length;
+	            count++;
+	            ans = checkNeighRec((x + 1)%map.length, y%map[0].length, ans, count, map);  // Assign the returned array back to ans
+	        }
+	        if (isInsideInt(x, y - 1) && map[x%map.length][(y - 1)%map[0].length] == until - 1) {
+	            ans[count][0] = x%map.length;
+	            ans[count][1] = (y - 1)%map[0].length;
+	            count++;
+	            ans = checkNeighRec(x%map.length,( y - 1)%map[0].length, ans, count, map);  // Assign the returned array back to ans
+	        }
+	        if (isInsideInt(x%map.length,( y + 1)%map[0].length) && map[x%map.length][(y + 1)%map[0].length] == until - 1) {
+	            ans[count][0] = x%map.length;
+	            ans[count][1] = (y + 1)%map[0].length;
+	            count++;
+	            ans = checkNeighRec(x%map.length,( y + 1)%map[0].length, ans, count, map);  // Assign the returned array back to ans
 	        }
 	    }
-
-	    if (_cyclicFlag) {
-	        if (map[(x - 1) % _map.length][(y) % _map[0].length] == current - 1 && isInsideInt(x - 1, y) && map[(x - 1) % _map.length][(y) % _map[0].length] != obs) {
-	            ans[count][0] = x - 1;
-	            ans[count][1] = y;
-	            count++;
-	            ans = checkNeighRec(x - 1, y, ans, count, obs, map);
-	        }
-
-	        if (map[(x + 1) % _map.length][y % _map[0].length] == current - 1 && isInsideInt(x + 1, y) && map[(x + 1) % _map.length][y % _map[0].length] != obs) {
-	            ans[count][0] = x + 1;
-	            ans[count][1] = y;
-	            count++;
-	            ans = checkNeighRec(x + 1, y, ans, count, obs, map);
-	        }
-
-	        if (map[x % _map.length][(y - 1) % _map[0].length] == current - 1 && isInsideInt(x, y - 1) && map[x % _map.length][(y - 1) % _map[0].length] != obs) {
-	            ans[count][0] = x;
-	            ans[count][1] = y - 1;
-	            count++;
-	            ans = checkNeighRec(x, y - 1, ans, count, obs, map);
-	        }
-
-	        if (map[x % _map.length][(y + 1) % _map[0].length] == current - 1 && isInsideInt(x, y + 1) && map[x % _map.length][(y + 1) % _map[0].length] != obs) {
-	            ans[count][0] = x;
-	            ans[count][1] = y + 1;
-	            count++;
-	            ans = checkNeighRec(x, y + 1, ans, count, obs, map);
-	        }
-	    }
-
+	    
 	    // Return the updated path
 	    return ans;
 	}
 
 
-
-	
 	
 	@Override
 	/////// add your code below ///////
@@ -459,7 +447,7 @@ public class Map implements Map2D {
 		
 	}
 	public boolean isInsideInt(int x , int y) {
-		if(x < _map.length && y<_map[0].length && x>=0 && y>=0 && is2DArray(_map)) {
+		if(x < _map.length && y<_map[0].length && x>=0 && y>=0) {
 			return true;
 		}
 		return false;
@@ -506,4 +494,3 @@ public class Map implements Map2D {
 	}
 
 }
-
