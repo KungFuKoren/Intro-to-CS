@@ -31,11 +31,11 @@ class MapTest {
     }
     
     @Test
-    public void testRaggedArray() {
+    public void testRaggedArrayisMap() {
     	int [][] ragArr = {{1,2,3} ,{1,2} ,{1,2,3,4}};
     	Map map3 = new Map(ragArr);
 
-     Assertions.assertEquals(null,map3.getMap());
+        assertEquals(false,Map.is2DArray(ragArr));
 }
     
     @Test
@@ -75,78 +75,275 @@ class MapTest {
 
     }
     @Test
-    public void testFill() {
-    	Map map6 = new Map (10,10,5);
-    	map6.fillRec(4,5,5,6);
-    	assertEquals(map6.getPixel(4, 4) , 5);
+   
+    public void testFillRecUnchanged() {
+    	Map map6 = new Map (5,5,-2);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 3, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	map6.fillRec(0,0,-2,6);
+    	
+    	assertEquals(map6.getPixel(4, 4) , -2);
+    }
+    @Test
+    public void testFillRecChanged() {
+    	Map map6 = new Map (5,5,-2);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 3, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	map6.fillRec(0,0,-2,6);
+    	
+    	assertEquals(map6.getPixel(1, 2) , 6);
+    	
+    }
+    @Test
+    public void testFillRecObst() {
+    	Map map6 = new Map (5,5,-2);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 3, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	map6.fillRec(0,0,-2,6);
+    	
+    	assertEquals(map6.getPixel(2, 2) , -1);
+    }
+    @Test 
+    public void testFillCountNoCyclic() {
+    	Index2D ind1 = new Index2D(4,3);
+    	Map map6 = new Map (5,5,-2);
+    	map6.setCyclic(false);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 3, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	assertEquals(map6.fill(ind1, 0),10);
+    }
+    @Test 
+    public void testFillCountCyclic() {
+    	Index2D ind1 = new Index2D(4,3);
+    	Map map6 = new Map (5,5,-2);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 3, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	assertEquals(map6.fill(ind1, 0),20);
+    }
+    @Test 
+    public void testFillCountNoCyclicWithHole() {
+    	Index2D ind1 = new Index2D(4,3);
+    	Map map6 = new Map (5,5,-2);
+    	map6.setCyclic(false);
+    	map6.setPixel(2, 1, -1);
+    	map6.setPixel(2, 2, -1);
+    	map6.setPixel(2, 4, -1);
+    	map6.setPixel(2, 0, -1);
+    	assertEquals(map6.fill(ind1, 0),21);
     }
    
-      
-    @Test
-    public void testFillRec_ChangePixels() {
-        int origColor = 1;
-        int newColor = 3;
-        int x = 0;
-        int y = 0;
-        int expectedCount = 16; // All 16 pixels should be changed
+   @Test
+   public void testNeighborCount() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setCyclic(false);
+	   	map6.setPixel(2, 1, -1);
+	   	map6.setPixel(2, 2, -1);
+	   	map6.setPixel(2, 3, -1);
+	   	map6.setPixel(2, 4, -1);
+	   int arr[][] = map6.neighborCount(1,4,-1);
+	       assertEquals(arr[3][4],10);
+   }
+   @Test
+   public void testNeighborCount2() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setCyclic(false);
+	   	map6.setPixel(2, 1, -1);
+	   	map6.setPixel(2, 2, -1);
+	   	map6.setPixel(2, 3, -1);
+	   	map6.setPixel(2, 4, -1);
+	   int arr[][] = map6.neighborCount(1,1,-1);
+	       assertEquals(6,arr[3][3]);
+   }
+   @Test
+   public void testNeighborCountObs() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setCyclic(false);
+	   	map6.setPixel(2, 1, -1);
+	   	map6.setPixel(2, 2, -1);
+	   	map6.setPixel(2, 3, -1);
+	   	map6.setPixel(2, 4, -1);
+	   int arr[][] = map6.neighborCount(1,1,-1);
+	       assertEquals(-1,arr[2][2]);
+   }
+   
+   @Test
+   public void testNeighborCountCyclic() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setPixel(2, 1, -1);
+	   	map6.setPixel(2, 2, -1);
+	   	map6.setPixel(2, 3, -1);
+	   	map6.setPixel(2, 4, -1);
+	   int arr[][] = map6.neighborCount(0,0,-1);
+	       assertEquals(1,arr[4][0]);
+   }
+   @Test
+   public void testNeighborCountBlocked() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setCyclic(false);
+	   	map6.setPixel(2, 1, -1);
+	   	map6.setPixel(2, 2, -1);
+	   	map6.setPixel(2, 3, -1);
+	   	map6.setPixel(2, 4, -1);
+	   	map6.setPixel(2, 0 ,-1);
+	   int arr[][] = map6.neighborCount(1,1,-1);
+	       assertEquals(-2,arr[3][3]);
+   }
+   /*
+   {4,3,-1,7,8}
+   {3,2,-1,6,7}
+   {2,1,-1,5,6}
+   {1,0,-1,4,5}
+   {2,1, 2,3,4}
+   */
+   @Test
+   public void testCheckNeigh() {
+	   Map map6 = new Map (5,5,-2);
+	   	map6.setCyclic(false);
 
-        int count = map2.fillRec(x, y, origColor, newColor);
-        assertEquals(expectedCount, count);
-
-        // Check if all pixels have the new color
-        int[][] expectedMap = new int[][] {
-                {3, 3, 3, 3},
-                {3, 2, 2, 1},
-                {3, 2, 2, 1},
-                {3, 1, 1, 1}
-        };
-        assertArrayEquals(expectedMap, map2);
-    }
-    public void testCheckNeigh_ValidPath() {
-        int x = 1;
-        int y = 1;
-        int obsColor = 2;
-        int color = 3;
-
-        int[][] map = new int[][] {
-                {3, 2, 2, 3},
-                {2, 0, 0, 2},
-                {2, 0, 0, 2},
-                {3, 2, 2, 3}
-        };
-
-        int[][] expectedPath = new int[][] {
-                {1, 1},
-                {1, 0},
-                {0, 0},
-                {0, 1}
-        };
-
-        int[][] result = map2.checkNeigh(x, y, obsColor, map, color);
-
-        assertArrayEquals(expectedPath, result);
-    }
-
-    @Test
-    public void testCheckNeigh_InvalidPath() {
-        int x = 0;
-        int y = 0;
-        int obsColor = 2;
-        int color = 3;
-
-        int[][] map = new int[][] {
-                {3, 2, 2, 3},
-                {2, 0, 0, 2},
-                {2, 0, 0, 2},
-                {3, 2, 2, 3}
-        };
-
-        int[][] expectedPath = new int[][] {
-                {-1}
-        };
-
-        int[][] result = map2.checkNeigh(x, y, obsColor, map, color);
-
-        assertArrayEquals(expectedPath, result);
-    }
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   int map[][] =   map6.neighborCount(1,1,-1);
+	   Map map7 = new Map(map);
+	   map7.setCyclic(false);
+       int arr [][] = map7.checkNeigh(3, 4, -1, map, -2);
+	   assertEquals( arr[5][0],2);
+   }
+   
+   @Test
+   public void testCheckNeighCyclic() {
+	   Map map6 = new Map (5,5,-2);
+	   map6.setCyclic(true);
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   int map[][] =   map6.neighborCount(1,4,-1);
+	   Map map7 = new Map(map);
+	   map7.setCyclic(true);
+       int arr [][] = map7.checkNeigh(3, 4, -1, map, -2);      
+	   assertEquals( arr[3][0],1);
+   }
+   
+   @Test
+   public void testShoretstCyclic() {
+	   Map map6 = new Map (5,5,-2);
+	   map6.setCyclic(true);
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   Index2D indStart = new Index2D(3, 4);
+	   Index2D indEnd = new Index2D(1, 1);
+	   Pixel2D [] array = map6.shortestPath(indStart , indEnd , -1);
+	   assertEquals(array.length,6);   
+   }
+   
+   @Test
+   public void testShoretst() {
+	   Map map6 = new Map (5,5,-2);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   Index2D indStart = new Index2D(3, 4);
+	   Index2D indEnd = new Index2D(1, 1);
+	   Pixel2D [] array = map6.shortestPath(indStart , indEnd , -1);
+	   assertEquals(array.length,8);   
+   }
+   
+   @Test
+   public void testShoretstIndValue() {
+	   Map map6 = new Map (5,5,-2);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   Index2D indStart = new Index2D(3, 4);
+	   Index2D indEnd = new Index2D(1, 1);
+	   Pixel2D [] array = map6.shortestPath(indStart , indEnd , -1);
+	   int num = map6.getPixel(3, 4);
+	   assertEquals(num,-2);   
+   }
+   @Test
+   public void testShoretstBlocked() {
+	   Map map6 = new Map (5,5,-2);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -1);
+	   map6.setPixel(2, 2, -1);
+	   map6.setPixel(2, 3, -1);
+	   map6.setPixel(2, 4, -1);
+	   map6.setPixel(2, 0, -1);
+	   Index2D indStart = new Index2D(3, 4);
+	   Index2D indEnd = new Index2D(1, 1);
+	   Pixel2D [] array = map6.shortestPath(indStart , indEnd , -1);
+	   assertEquals(array,null);   
+   }
+  @Test
+  public void testAllDistance() {
+	  Map map6 = new Map (5,5,-3);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -2);
+	   map6.setPixel(2, 2, -2);
+	   map6.setPixel(2, 3, -2);
+	   map6.setPixel(2, 4, -2);
+	   Index2D indStart = new Index2D(3, 4);
+	   assertEquals(map6.allDistance(indStart , -2).getPixel(4,4) , 1);
+	   
+  }
+  @Test
+  public void testAllDistanceBarrier() {
+	  Map map6 = new Map (5,5,-3);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -2);
+	   map6.setPixel(2, 2, -2);
+	   map6.setPixel(2, 3, -2);
+	   map6.setPixel(2, 4, -2);
+	   map6.setPixel(2, 0,-2);
+	   Index2D indStart = new Index2D(3, 4);
+	   assertEquals(map6.allDistance(indStart , -2).getPixel(1,1) , -1);
+	   
+  }
+  @Test
+  public void testAllDistanceObs() {
+	  Map map6 = new Map (5,5,-3);
+	   map6.setCyclic(false);
+	   map6.setPixel(2, 1, -2);
+	   map6.setPixel(2, 2, -2);
+	   map6.setPixel(2, 3, -2);
+	   map6.setPixel(2, 4, -2);
+	   Index2D indStart = new Index2D(3, 4);
+	   assertEquals(map6.allDistance(indStart , -2).getPixel(2,4) , -2);
+	   
+  }
+  @Test
+  public void testAllDistanceCyclic() {
+	  Map map6 = new Map (5,5,-3);
+	   map6.setCyclic(true);
+	   map6.setPixel(2, 1, -2);
+	   map6.setPixel(2, 2, -2);
+	   map6.setPixel(2, 3, -2);
+	   map6.setPixel(2, 4, -2);
+	   Index2D indStart = new Index2D(3, 4);
+	   assertEquals(map6.allDistance(indStart , -2).getPixel(0,4) , 2);
+	   
+  }
 }
